@@ -148,6 +148,12 @@ static uint8_t getSBoxInvert(uint8_t num)
 */
 #define getSBoxInvert(num) (rsbox[(num)])
 
+__attribute__((noinline))
+void aes_round_marker(void) {
+    asm volatile("nop\n\t");
+    return;
+}
+
 // This function produces Nb(Nr+1) round keys. The round keys are used in each round to decrypt the states. 
 static void KeyExpansion(uint8_t* RoundKey, const uint8_t* Key)
 {
@@ -444,17 +450,19 @@ static void InvCipher(state_t* state,uint8_t* RoundKey)
   // These Nr-1 rounds are executed in the loop below.
   for (round = (Nr - 1); round > 0; --round)
   {
+    aes_round_marker();
     InvShiftRows(state);
     InvSubBytes(state);
     AddRoundKey(round, state, RoundKey);
     InvMixColumns(state);
   }
-  
+  aes_round_marker();
   // The last round is given below.
   // The MixColumns function is not here in the last round.
   InvShiftRows(state);
   InvSubBytes(state);
   AddRoundKey(0, state, RoundKey);
+  aes_round_marker();
 }
 
 
